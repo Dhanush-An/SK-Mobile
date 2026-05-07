@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "@react-native-community/cli": "^20.1.3",
+    "@react-native-community/cli-platform-android": "^20.1.3",
+    "@react-native-community/cli-platform-ios": "^20.1.3"
+  }
+}
