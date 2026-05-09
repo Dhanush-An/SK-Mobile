@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { TokenPayload } from '../utils/generateToken';
 import User from '../models/User';
-import { mockData, isDbConnected } from '../utils/mockStore';
+
 
 export interface AuthRequest extends Request {
   user?: {
@@ -36,16 +36,6 @@ export const protect = async (
 
     const decoded = jwt.verify(token, secret) as TokenPayload;
 
-    // Mock Mode
-    if (!isDbConnected()) {
-      const user = mockData.users.find((u: any) => u._id === decoded.userId);
-      if (!user || !user.isActive) {
-        res.status(401).json({ success: false, message: 'User not found (MOCK)' });
-        return;
-      }
-      req.user = { userId: decoded.userId, role: decoded.role };
-      return next();
-    }
 
     // Check user still exists and is active
     const user = await User.findById(decoded.userId).select('-password');

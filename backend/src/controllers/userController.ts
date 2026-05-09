@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/authMiddleware';
-import { mockData, isDbConnected } from '../utils/mockStore';
+
 
 // GET /api/users  [Admin]
 export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -9,30 +9,12 @@ export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void
   const filter: Record<string, string> = {};
   if (role && typeof role === 'string') filter.role = role;
 
-  // Mock Mode
-  if (!isDbConnected()) {
-    const users = mockData.users.filter((u: any) => !role || u.role === role);
-    res.status(200).json({ success: true, data: { users } });
-    return;
-  }
-
   const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
   res.status(200).json({ success: true, data: { users } });
 };
 
 // GET /api/users/:id  [Admin]
 export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
-  // Mock Mode
-  if (!isDbConnected()) {
-    const user = mockData.users.find((u: any) => u._id === req.params.id);
-    if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
-      return;
-    }
-    res.status(200).json({ success: true, data: { user } });
-    return;
-  }
-
   const user = await User.findById(req.params.id).select('-password');
   if (!user) {
     res.status(404).json({ success: false, message: 'User not found' });

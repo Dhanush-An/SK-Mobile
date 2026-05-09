@@ -11,16 +11,16 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import AppCard from '../../components/AppCard';
 import Loading from '../../components/Loading';
+import { announcementApi } from '../../api/announcementApi';
+
 
 const { width, height } = Dimensions.get('window');
 
 const TechnicianDashboard = () => {
   const { user, logout } = useAuth();
   const [stats, setStats] = useState({ income: 0, rating: 4.9, success: 0, load: '18m' });
-  const [tasks, setTasks] = useState([
-    { id: 'T-1024', title: 'AC System Diagnostics', client: 'Global Corp', location: 'Zone 7', priority: 'URGENT', status: 'PENDING' },
-    { id: 'T-1089', title: 'Power Grid Calibration', client: 'Neo Link', location: 'Sector 4', priority: 'STANDARD', status: 'IN_PROGRESS' },
-  ]);
+  const [tasks, setTasks] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -28,27 +28,16 @@ const TechnicianDashboard = () => {
   const [isPunchedIn, setIsPunchedIn] = useState(false);
   const [shiftSeconds, setShiftSeconds] = useState(0);
   const [activeView, setActiveView] = useState('tasks');
-  const [attendanceHistory, setAttendanceHistory] = useState([
-    { date: '2026-05-05', punchIn: '09:00 AM', punchOut: '06:00 PM', duration: '09:00:00', status: 'PRESENT' },
-    { date: '2026-05-04', punchIn: '08:55 AM', punchOut: '06:05 PM', duration: '09:10:00', status: 'PRESENT' },
-    { date: '2026-05-03', punchIn: '09:10 AM', punchOut: '05:50 PM', duration: '08:40:00', status: 'PRESENT' },
-  ]);
-  const [announcements, setAnnouncements] = useState([
-    { id: 1, title: 'NEW SAFETY PROTOCOL', content: 'ALL TECHNICIANS MUST WEAR GRADE-4 SAFETY HELMETS ON SITE.', date: '2026-05-06', priority: 'HIGH' },
-    { id: 2, title: 'SOFTWARE UPDATE', content: 'VERSION 2.4.0 OF COMMAND CENTER IS NOW LIVE. RESTART APP TO APPLY.', date: '2026-05-04', priority: 'NORMAL' },
-    { id: 3, title: 'WEEKLY MEETING', content: 'ALL HANDS MEETING ON FRIDAY AT 10:00 AM IN THE CONFERENCE ROOM.', date: '2026-05-03', priority: 'MEDIUM' },
-  ]);
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'TASK ASSIGNED', message: 'T-1024 HAS BEEN ASSIGNED TO YOU.', time: '2h ago', isRead: false },
-    { id: 2, title: 'PAYMENT RECEIVED', message: 'YOUR INCENTIVE FOR PROJECT X HAS BEEN CREDITED.', time: '5h ago', isRead: true },
-    { id: 3, title: 'LEAVE APPROVED', message: 'YOUR LEAVE REQUEST FOR NEXT MONDAY IS APPROVED.', time: '1d ago', isRead: true },
-  ]);
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
+
+  const [announcements, setAnnouncements] = useState([]);
+
+  const [notifications, setNotifications] = useState([]);
+
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
-  const [messages, setMessages] = useState([
-    { id: 1, text: 'CENTRAL COMMAND ONLINE. STANDBY FOR BRIEFING.', sender: 'ADMIN', time: '10:00 AM' },
-    { id: 2, text: 'REQUESTING STATUS UPDATE ON PROJECT T-1024.', sender: 'ADMIN', time: '10:05 AM' },
-  ]);
+  const [messages, setMessages] = useState([]);
+
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [taskSeconds, setTaskSeconds] = useState(0);
   const [location, setLocation] = useState({ latitude: 12.9716, longitude: 77.5946 }); // Bangalore default
@@ -74,11 +63,8 @@ const TechnicianDashboard = () => {
     }
   }, [location, activeTaskId]);
 
-  const [salaryLogs, setSalaryLogs] = useState([
-    { id: 1, date: 'APRIL 26, 2026', hours: '0 hrs', earnings: '₹0', type: 'SUNDAY_AUTO' },
-    { id: 2, date: 'APRIL 19, 2026', hours: '0 hrs', earnings: '₹0', type: 'SUNDAY_AUTO' },
-    { id: 3, date: 'APRIL 12, 2026', hours: '0 hrs', earnings: '₹0', type: 'SUNDAY_AUTO' },
-  ]);
+  const [salaryLogs, setSalaryLogs] = useState([]);
+
   const [claims, setClaims] = useState<any[]>([]);
   const [isClaimFormVisible, setIsClaimFormVisible] = useState(false);
   const [claimCategory, setClaimCategory] = useState('TRAVEL');
@@ -108,9 +94,28 @@ const TechnicianDashboard = () => {
     }
   }, [user?._id]);
 
+  const fetchAnnouncements = useCallback(async () => {
+    try {
+      const res = await announcementApi.getAll();
+      if (res.data.success) {
+        setAnnouncements(res.data.data);
+      }
+    } catch (err) {
+      console.log('Error fetching announcements:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnnouncements();
+    // Poll for new announcements every minute
+    const interval = setInterval(fetchAnnouncements, 60000);
+    return () => clearInterval(interval);
+  }, [fetchAnnouncements]);
+
   useEffect(() => {
     if (activeView === 'leave_hub') fetchMyLeaves();
   }, [activeView, fetchMyLeaves]);
+
 
   const deleteSalaryLog = (id: number) => {
     Alert.alert(
@@ -574,9 +579,23 @@ const TechnicianDashboard = () => {
           </View>
         </View>
         <View style={styles.commandContent}>
-          <Text style={styles.commandPlaceholder}>No operational logs found</Text>
+          {announcements.length > 0 ? (
+            announcements.map((ann: any) => (
+              <View key={ann._id} style={styles.annItem}>
+                <View style={styles.annHeader}>
+                  <Text style={styles.annTitle}>{ann.title}</Text>
+                  <View style={[styles.annPriorityDot, { backgroundColor: ann.priority === 'HIGH' ? '#FF5252' : '#2979FF' }]} />
+                </View>
+                <Text style={styles.annContent}>{ann.content}</Text>
+                <Text style={styles.annDate}>{new Date(ann.createdAt).toLocaleDateString()} • {ann.priority}</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.commandPlaceholder}>No operational logs found</Text>
+          )}
         </View>
       </AppCard>
+
     </>
   );
 
@@ -1146,7 +1165,7 @@ const TechnicianDashboard = () => {
       <ScreenWrapper refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchStats(); }}>
         <View style={styles.topBar}>
           <View style={styles.brandContainer}>
-            <Image source={require('../../assets/Sk tech logo.png')} style={styles.miniLogo} resizeMode="contain" />
+            <Image source={require('../../assets/sk_tech_logo.png')} style={styles.miniLogo} resizeMode="contain" />
             <View>
               <Text style={styles.brandName}>Sk <Text style={{ color: '#2979FF' }}>technology</Text></Text>
               <Text style={styles.brandTagline}>COMMAND CENTER</Text>
@@ -1219,7 +1238,7 @@ const TechnicianDashboard = () => {
           >
             <View style={styles.sidebarHeader}>
               <View style={styles.logoBox}>
-                <Image source={require('../../assets/Sk tech logo.png')} style={styles.sidebarLogo} resizeMode="contain" />
+                <Image source={require('../../assets/sk_tech_logo.png')} style={styles.sidebarLogo} resizeMode="contain" />
               </View>
               <View>
                 <Text style={styles.sidebarTitle}>SK <Text style={{ color: '#2979FF' }}>TECHNOLOGY</Text></Text>
@@ -1547,6 +1566,14 @@ const styles = StyleSheet.create({
   modalCloseText: { color: '#fff', fontSize: 16, fontWeight: '300' },
   modalTitleRow: { marginBottom: 25 },
   modalMainTitle: { color: '#fff', fontSize: 24, fontWeight: '900', letterSpacing: -0.5 },
+  
+  annItem: { marginBottom: 20, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
+  annHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  annTitle: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  annPriorityDot: { width: 6, height: 6, borderRadius: 3 },
+  annContent: { color: 'rgba(255,255,255,0.6)', fontSize: 11, lineHeight: 16, marginBottom: 6 },
+  annDate: { color: 'rgba(255,255,255,0.3)', fontSize: 8, fontWeight: '700' },
 });
+
 
 export default TechnicianDashboard;

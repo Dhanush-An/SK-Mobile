@@ -20,7 +20,7 @@ const AppLogo: React.FC<AppLogoProps> = ({ size = 40, width, height, style, roun
       rounded && styles.rounded
     ]}>
       <Image
-        source={require('../assets/Sk tech logo.png')}
+        source={require('../assets/sk_tech_logo.png')}
         style={[
           {
             width: w * 0.9,

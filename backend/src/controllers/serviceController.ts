@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import Service from '../models/Service';
 import { AuthRequest } from '../middleware/authMiddleware';
-import { mockData, isDbConnected } from '../utils/mockStore';
+
 
 // POST /api/services  [Admin]
 export const createService = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -22,12 +22,6 @@ export const getServices = async (req: Request, res: Response): Promise<void> =>
   // Public sees only active; admin can see all via ?all=true
   if (req.query.all !== 'true') filter.isActive = true;
 
-  // Mock Mode
-  if (!isDbConnected()) {
-    const services = mockData.services.filter((s: any) => req.query.all === 'true' || s.isActive);
-    res.status(200).json({ success: true, data: { services } });
-    return;
-  }
 
   const services = await Service.find(filter).sort({ createdAt: -1 });
   res.status(200).json({ success: true, data: { services } });
@@ -35,16 +29,6 @@ export const getServices = async (req: Request, res: Response): Promise<void> =>
 
 // GET /api/services/:id  [Public]
 export const getServiceById = async (req: Request, res: Response): Promise<void> => {
-  // Mock Mode
-  if (!isDbConnected()) {
-    const service = mockData.services.find((s: any) => s._id === req.params.id);
-    if (!service) {
-      res.status(404).json({ success: false, message: 'Service not found' });
-      return;
-    }
-    res.status(200).json({ success: true, data: { service } });
-    return;
-  }
 
   const service = await Service.findById(req.params.id);
   if (!service) {

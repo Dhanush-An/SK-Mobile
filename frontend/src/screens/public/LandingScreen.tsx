@@ -11,6 +11,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
@@ -56,8 +57,9 @@ const StarRating = ({ count }: { count: number }) => (
 
 const LandingScreen = () => {
   const navigation = useNavigation<NavProp>();
+  const insets = useSafeAreaInsets();
   const { colors: Colors, toggleTheme } = useTheme();
-  const styles = createStyles(Colors);
+  const styles = createStyles(Colors, insets);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [showAuthAnimation, setShowAuthAnimation] = useState(false);
   const flatRef = useRef<FlatList>(null);
@@ -298,7 +300,9 @@ const LandingScreen = () => {
   );
 };
 
-const createStyles = (Colors: any) => StyleSheet.create({
+
+
+const createStyles = (Colors: any, insets: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   
   // Header Actions
@@ -307,7 +311,7 @@ const createStyles = (Colors: any) => StyleSheet.create({
     justifyContent: 'space-between', 
     alignItems: 'center', 
     paddingHorizontal: 16, 
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 15 : 50, 
+    paddingTop: Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0) + 10, 
     paddingBottom: 15,
     backgroundColor: Colors.primary 
   },

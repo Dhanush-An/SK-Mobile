@@ -8,6 +8,7 @@ export interface IUser extends Document {
     password: string;
     role: UserRole;
     isActive: boolean;
+    address?: string;
     technicianStatus: TechnicianStatus;
     comparePassword(candidatePassword: string): Promise<boolean>;
     createdAt: Date;

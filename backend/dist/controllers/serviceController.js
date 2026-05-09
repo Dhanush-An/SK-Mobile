@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteService = exports.updateService = exports.getServiceById = exports.getServices = exports.createService = void 0;
 const Service_1 = __importDefault(require("../models/Service"));
-const mockStore_1 = require("../utils/mockStore");
 // POST /api/services  [Admin]
 const createService = async (req, res) => {
     const { title, description, price, category, image } = req.body;
@@ -23,28 +22,12 @@ const getServices = async (req, res) => {
     // Public sees only active; admin can see all via ?all=true
     if (req.query.all !== 'true')
         filter.isActive = true;
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const services = mockStore_1.mockData.services.filter((s) => req.query.all === 'true' || s.isActive);
-        res.status(200).json({ success: true, data: { services } });
-        return;
-    }
     const services = await Service_1.default.find(filter).sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: { services } });
 };
 exports.getServices = getServices;
 // GET /api/services/:id  [Public]
 const getServiceById = async (req, res) => {
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const service = mockStore_1.mockData.services.find((s) => s._id === req.params.id);
-        if (!service) {
-            res.status(404).json({ success: false, message: 'Service not found' });
-            return;
-        }
-        res.status(200).json({ success: true, data: { service } });
-        return;
-    }
     const service = await Service_1.default.findById(req.params.id);
     if (!service) {
         res.status(404).json({ success: false, message: 'Service not found' });

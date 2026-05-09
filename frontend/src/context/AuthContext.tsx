@@ -11,8 +11,8 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
-  simulateRole: (role: 'admin' | 'technician' | 'customer') => void;
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -21,11 +21,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(() => {
     setToken(null);
     setUser(null);
-    await storage.delete('token');
-    await storage.delete('user');
+    storage.delete('token');
+    storage.delete('user');
   }, []);
 
   const refreshProfile = useCallback(async () => {
@@ -76,16 +76,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await storage.set('user', JSON.stringify(newUser));
   };
 
-  const simulateRole = (role: 'admin' | 'technician' | 'customer') => {
-    if (user) {
-      setUser({ ...user, role });
-    } else {
-      setUser({ _id: 'mock', name: 'MOCK USER', email: 'mock@sktech.com', role } as AuthUser);
-    }
-  };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshProfile, simulateRole }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshProfile }}>
+
       {children}
     </AuthContext.Provider>
   );

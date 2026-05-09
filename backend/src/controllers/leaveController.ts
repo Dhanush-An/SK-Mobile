@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import Leave from '../models/Leave';
 import { AuthRequest } from '../middleware/authMiddleware';
-import { isDbConnected, mockData, saveMockData } from '../utils/mockStore';
+
 
 export const leaveController = {
   apply: async (req: AuthRequest, res: Response) => {
@@ -9,33 +9,6 @@ export const leaveController = {
       const { reason, startDate, endDate } = req.body;
       const technicianId = req.user?.userId;
 
-      if (!isDbConnected()) {
-        const newLeave = {
-          _id: `mock_leave_${Date.now()}`,
-          technicianId,
-          reason,
-          startDate,
-          endDate,
-          status: 'pending',
-          createdAt: new Date()
-        };
-        mockData.leaves = mockData.leaves || [];
-        mockData.leaves.push(newLeave);
-        
-        // Notify admin
-        mockData.notifications.push({
-          _id: `mock_notif_${Date.now()}`,
-          userId: 'mock_admin',
-          title: 'New Leave Request',
-          message: `A technician has applied for leave.`,
-          type: 'leave',
-          isRead: false,
-          createdAt: new Date()
-        });
-        
-        saveMockData();
-        return res.status(201).json({ success: true, data: newLeave });
-      }
 
       const leave = new Leave({
         technicianId,
@@ -60,18 +33,6 @@ export const leaveController = {
       const isAdmin = req.user?.role === 'admin';
       const userId = req.user?.userId;
 
-      if (!isDbConnected()) {
-        let leaves = (mockData.leaves || []).map((l: any) => {
-          const user = mockData.users.find((u: any) => u._id === l.technicianId);
-          return { ...l, technicianId: { _id: l.technicianId, name: user?.name, email: user?.email } };
-        });
-
-        if (!isAdmin) {
-          leaves = leaves.filter((l: any) => l.technicianId?._id === userId || l.technicianId === userId);
-        }
-
-        return res.json({ success: true, data: leaves.sort((a: any, b: any) => b.createdAt - a.createdAt) });
-      }
 
       let query = {};
       if (!isAdmin) {
@@ -94,26 +55,6 @@ export const leaveController = {
         return res.status(400).json({ success: false, message: 'Invalid status' });
       }
 
-      if (!isDbConnected()) {
-        const index = mockData.leaves.findIndex((l: any) => l._id === id);
-        if (index === -1) return res.status(404).json({ success: false, message: 'Not found' });
-        
-        mockData.leaves[index].status = status;
-        
-        // Notify tech
-        mockData.notifications.push({
-          _id: `mock_notif_${Date.now()}`,
-          userId: mockData.leaves[index].technicianId,
-          title: `Leave ${status.toUpperCase()}`,
-          message: `Your leave request has been ${status}.`,
-          type: 'leave',
-          isRead: false,
-          createdAt: new Date()
-        });
-        
-        saveMockData();
-        return res.json({ success: true, data: mockData.leaves[index] });
-      }
 
       const leave = await Leave.findByIdAndUpdate(id, { status }, { new: true });
       if (!leave) {

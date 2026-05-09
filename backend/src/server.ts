@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async (): Promise<void> => {
   await connectDB();
 
-  app.listen(PORT, () => {
+  app.listen(PORT as number, '0.0.0.0', () => {
     console.log(`🚀 SK Technology Server running on port ${PORT}`);
     console.log(`📍 Health: http://localhost:${PORT}/health`);
     console.log(`📍 API Base: http://localhost:${PORT}/api`);

@@ -7,38 +7,11 @@ exports.getReports = exports.cancelOrder = exports.updateOrderStatus = exports.a
 const Order_1 = __importDefault(require("../models/Order"));
 const User_1 = __importDefault(require("../models/User"));
 const Service_1 = __importDefault(require("../models/Service"));
-const mockStore_1 = require("../utils/mockStore");
 // POST /api/orders  [Customer]
 const createOrder = async (req, res) => {
     const { serviceId, address, contactPhone, preferredDate, preferredTime, notes } = req.body;
     if (!serviceId || !address || !contactPhone || !preferredDate || !preferredTime) {
         res.status(400).json({ success: false, message: 'serviceId, address, contactPhone, preferredDate and preferredTime are required' });
-        return;
-    }
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const service = mockStore_1.mockData.services.find((s) => s._id === serviceId);
-        if (!service || !service.isActive) {
-            res.status(404).json({ success: false, message: 'Service not found or inactive' });
-            return;
-        }
-        const order = {
-            _id: `mock_o_${Date.now()}`,
-            customerId: req.user?.userId,
-            serviceId: service,
-            address,
-            contactPhone,
-            preferredDate,
-            preferredTime,
-            notes,
-            totalAmount: service.price,
-            status: 'pending',
-            paymentStatus: 'pending',
-            createdAt: new Date().toISOString(),
-        };
-        mockStore_1.mockData.orders.push(order);
-        (0, mockStore_1.saveMockData)();
-        res.status(201).json({ success: true, message: 'Order created (MOCK)', data: { order } });
         return;
     }
     const service = await Service_1.default.findById(serviceId);
@@ -68,17 +41,6 @@ const getMyOrders = async (req, res) => {
     const filter = { customerId: req.user?.userId };
     if (status)
         filter.status = status;
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const orders = mockStore_1.mockData.orders.filter((o) => o.customerId === req.user?.userId);
-        if (status) {
-            res.status(200).json({ success: true, data: { orders: orders.filter((o) => o.status === status) } });
-        }
-        else {
-            res.status(200).json({ success: true, data: { orders } });
-        }
-        return;
-    }
     const orders = await Order_1.default.find(filter)
         .populate('serviceId', 'title price category image')
         .populate('technicianId', 'name phone')
@@ -94,17 +56,6 @@ const getAllOrders = async (req, res) => {
         filter.status = status;
     if (paymentStatus)
         filter.paymentStatus = paymentStatus;
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const orders = mockStore_1.mockData.orders;
-        if (status) {
-            res.status(200).json({ success: true, data: { orders: orders.filter((o) => o.status === status) } });
-        }
-        else {
-            res.status(200).json({ success: true, data: { orders } });
-        }
-        return;
-    }
     const orders = await Order_1.default.find(filter)
         .populate('customerId', 'name email phone')
         .populate('serviceId', 'title price category')
@@ -119,17 +70,6 @@ const getAssignedOrders = async (req, res) => {
     const filter = { technicianId: req.user?.userId };
     if (status)
         filter.status = status;
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const orders = mockStore_1.mockData.orders.filter((o) => o.technicianId === req.user?.userId);
-        if (status) {
-            res.status(200).json({ success: true, data: { orders: orders.filter((o) => o.status === status) } });
-        }
-        else {
-            res.status(200).json({ success: true, data: { orders } });
-        }
-        return;
-    }
     const orders = await Order_1.default.find(filter)
         .populate('customerId', 'name email phone')
         .populate('serviceId', 'title price category')
@@ -139,21 +79,6 @@ const getAssignedOrders = async (req, res) => {
 exports.getAssignedOrders = getAssignedOrders;
 // GET /api/orders/:id  [Auth]
 const getOrderById = async (req, res) => {
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const order = mockStore_1.mockData.orders.find((o) => o._id === req.params.id);
-        if (!order) {
-            res.status(404).json({ success: false, message: 'Order not found' });
-            return;
-        }
-        // Auth check
-        if (req.user?.role === 'customer' && order.customerId !== req.user.userId) {
-            res.status(403).json({ success: false, message: 'Access denied' });
-            return;
-        }
-        res.status(200).json({ success: true, data: { order } });
-        return;
-    }
     const order = await Order_1.default.findById(req.params.id)
         .populate('customerId', 'name email phone')
         .populate('serviceId', 'title price description category image')
@@ -261,28 +186,6 @@ const cancelOrder = async (req, res) => {
 exports.cancelOrder = cancelOrder;
 // GET /api/orders/reports  [Admin]
 const getReports = async (req, res) => {
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const revenue = mockStore_1.mockData.orders.filter((o) => o.paymentStatus === 'paid').reduce((acc, o) => acc + o.totalAmount, 0);
-        res.status(200).json({
-            success: true,
-            data: {
-                summary: {
-                    totalOrders: mockStore_1.mockData.orders.length,
-                    completedOrders: mockStore_1.mockData.orders.filter((o) => o.status === 'completed').length,
-                    pendingOrders: mockStore_1.mockData.orders.filter((o) => o.status === 'pending').length,
-                    activeOrders: mockStore_1.mockData.orders.filter((o) => ['assigned', 'accepted', 'in_progress'].includes(o.status)).length,
-                    revenue,
-                    pendingPayments: mockStore_1.mockData.orders.filter((o) => o.status === 'completed' && o.paymentStatus === 'pending').length,
-                    totalUsers: mockStore_1.mockData.users.length,
-                    totalCustomers: mockStore_1.mockData.users.filter((u) => u.role === 'customer').length,
-                    totalTechnicians: mockStore_1.mockData.users.filter((u) => u.role === 'technician').length,
-                },
-                monthlyRevenue: [],
-            },
-        });
-        return;
-    }
     const [totalOrders, completedOrders, pendingOrders, activeOrders, totalRevenue, totalUsers, totalCustomers, totalTechnicians,] = await Promise.all([
         Order_1.default.countDocuments(),
         Order_1.default.countDocuments({ status: 'completed' }),

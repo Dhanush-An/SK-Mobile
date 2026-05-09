@@ -3,7 +3,7 @@ import Order from '../models/Order';
 import User from '../models/User';
 import Service from '../models/Service';
 import { AuthRequest } from '../middleware/authMiddleware';
-import { mockData, isDbConnected, saveMockData } from '../utils/mockStore';
+
 
 // POST /api/orders  [Customer]
 export const createOrder = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -14,32 +14,6 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
     return;
   }
 
-  // Mock Mode
-  if (!isDbConnected()) {
-    const service = mockData.services.find((s: any) => s._id === serviceId);
-    if (!service || !service.isActive) {
-      res.status(404).json({ success: false, message: 'Service not found or inactive' });
-      return;
-    }
-    const order = {
-      _id: `mock_o_${Date.now()}`,
-      customerId: req.user?.userId,
-      serviceId: service,
-      address,
-      contactPhone,
-      preferredDate,
-      preferredTime,
-      notes,
-      totalAmount: service.price,
-      status: 'pending',
-      paymentStatus: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    mockData.orders.push(order);
-    saveMockData();
-    res.status(201).json({ success: true, message: 'Order created (MOCK)', data: { order } });
-    return;
-  }
 
   const service = await Service.findById(serviceId);
   if (!service || !service.isActive) {
@@ -70,16 +44,6 @@ export const getMyOrders = async (req: AuthRequest, res: Response): Promise<void
   const filter: Record<string, unknown> = { customerId: req.user?.userId };
   if (status) filter.status = status;
 
-  // Mock Mode
-  if (!isDbConnected()) {
-    const orders = mockData.orders.filter((o: any) => o.customerId === req.user?.userId);
-    if (status) {
-      res.status(200).json({ success: true, data: { orders: orders.filter((o: any) => o.status === status) } });
-    } else {
-      res.status(200).json({ success: true, data: { orders } });
-    }
-    return;
-  }
 
   const orders = await Order.find(filter)
     .populate('serviceId', 'title price category image')
@@ -96,16 +60,6 @@ export const getAllOrders = async (req: AuthRequest, res: Response): Promise<voi
   if (status) filter.status = status;
   if (paymentStatus) filter.paymentStatus = paymentStatus;
 
-  // Mock Mode
-  if (!isDbConnected()) {
-    const orders = mockData.orders;
-    if (status) {
-      res.status(200).json({ success: true, data: { orders: orders.filter((o: any) => o.status === status) } });
-    } else {
-      res.status(200).json({ success: true, data: { orders } });
-    }
-    return;
-  }
 
   const orders = await Order.find(filter)
     .populate('customerId', 'name email phone')
@@ -122,16 +76,6 @@ export const getAssignedOrders = async (req: AuthRequest, res: Response): Promis
   const filter: Record<string, unknown> = { technicianId: req.user?.userId };
   if (status) filter.status = status;
 
-  // Mock Mode
-  if (!isDbConnected()) {
-    const orders = mockData.orders.filter((o: any) => o.technicianId === req.user?.userId);
-    if (status) {
-      res.status(200).json({ success: true, data: { orders: orders.filter((o: any) => o.status === status) } });
-    } else {
-      res.status(200).json({ success: true, data: { orders } });
-    }
-    return;
-  }
 
   const orders = await Order.find(filter)
     .populate('customerId', 'name email phone')
@@ -143,21 +87,6 @@ export const getAssignedOrders = async (req: AuthRequest, res: Response): Promis
 
 // GET /api/orders/:id  [Auth]
 export const getOrderById = async (req: AuthRequest, res: Response): Promise<void> => {
-  // Mock Mode
-  if (!isDbConnected()) {
-    const order = mockData.orders.find((o: any) => o._id === req.params.id);
-    if (!order) {
-      res.status(404).json({ success: false, message: 'Order not found' });
-      return;
-    }
-    // Auth check
-    if (req.user?.role === 'customer' && order.customerId !== req.user.userId) {
-      res.status(403).json({ success: false, message: 'Access denied' });
-      return;
-    }
-    res.status(200).json({ success: true, data: { order } });
-    return;
-  }
 
   const order = await Order.findById(req.params.id)
     .populate('customerId', 'name email phone')
@@ -193,29 +122,6 @@ export const assignTechnician = async (req: AuthRequest, res: Response): Promise
     return;
   }
 
-  // Mock Mode
-  if (!isDbConnected()) {
-    const technician = mockData.users.find((u: any) => u._id === technicianId && u.role === 'technician');
-    if (!technician) {
-      res.status(404).json({ success: false, message: 'Technician not found' });
-      return;
-    }
-    const orderIndex = mockData.orders.findIndex((o: any) => o._id === req.params.id);
-    if (orderIndex === -1) {
-      res.status(404).json({ success: false, message: 'Order not found' });
-      return;
-    }
-    mockData.orders[orderIndex].technicianId = technicianId;
-    mockData.orders[orderIndex].status = 'assigned';
-    
-    // Update technician status
-    const techIndex = mockData.users.findIndex((u: any) => u._id === technicianId);
-    mockData.users[techIndex].technicianStatus = 'busy';
-    
-    saveMockData();
-    res.status(200).json({ success: true, message: 'Technician assigned (MOCK)', data: { order: mockData.orders[orderIndex] } });
-    return;
-  }
 
   const technician = await User.findById(technicianId);
   if (!technician || technician.role !== 'technician') {
@@ -253,34 +159,6 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
     return;
   }
 
-  // Mock Mode
-  if (!isDbConnected()) {
-    const orderIndex = mockData.orders.findIndex((o: any) => o._id === req.params.id);
-    if (orderIndex === -1) {
-      res.status(404).json({ success: false, message: 'Order not found' });
-      return;
-    }
-    const order = mockData.orders[orderIndex];
-
-    if (req.user?.role === 'technician' && order.technicianId !== req.user.userId) {
-      res.status(403).json({ success: false, message: 'Access denied' });
-      return;
-    }
-
-    order.status = status;
-    if (technicianNote) order.technicianNote = technicianNote;
-    if (rejectReason) order.rejectReason = rejectReason;
-    if (workProofImage) order.workProofImage = workProofImage;
-
-    if (['completed', 'rejected', 'cancelled'].includes(status) && order.technicianId) {
-      const techIndex = mockData.users.findIndex((u: any) => u._id === order.technicianId);
-      if (techIndex > -1) mockData.users[techIndex].technicianStatus = 'available';
-    }
-    
-    saveMockData();
-    res.status(200).json({ success: true, message: 'Order status updated (MOCK)', data: { order } });
-    return;
-  }
 
   const order = await Order.findById(req.params.id);
   if (!order) {
@@ -319,27 +197,6 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
 
 // PUT /api/orders/:id/cancel  [Customer]
 export const cancelOrder = async (req: AuthRequest, res: Response): Promise<void> => {
-  // Mock Mode
-  if (!isDbConnected()) {
-    const orderIndex = mockData.orders.findIndex((o: any) => o._id === req.params.id);
-    if (orderIndex === -1) {
-      res.status(404).json({ success: false, message: 'Order not found' });
-      return;
-    }
-    const order = mockData.orders[orderIndex];
-    if (order.customerId !== req.user?.userId) {
-      res.status(403).json({ success: false, message: 'Access denied' });
-      return;
-    }
-    if (['completed', 'in_progress', 'cancelled'].includes(order.status)) {
-      res.status(400).json({ success: false, message: `Cannot cancel an order with status: ${order.status}` });
-      return;
-    }
-    order.status = 'cancelled';
-    saveMockData();
-    res.status(200).json({ success: true, message: 'Order cancelled (MOCK)', data: { order } });
-    return;
-  }
 
   const order = await Order.findById(req.params.id);
 
@@ -366,28 +223,6 @@ export const cancelOrder = async (req: AuthRequest, res: Response): Promise<void
 
 // GET /api/orders/reports  [Admin]
 export const getReports = async (req: AuthRequest, res: Response): Promise<void> => {
-  // Mock Mode
-  if (!isDbConnected()) {
-    const revenue = mockData.orders.filter((o: any) => o.paymentStatus === 'paid').reduce((acc: number, o: any) => acc + o.totalAmount, 0);
-    res.status(200).json({
-      success: true,
-      data: {
-        summary: {
-          totalOrders: mockData.orders.length,
-          completedOrders: mockData.orders.filter((o: any) => o.status === 'completed').length,
-          pendingOrders: mockData.orders.filter((o: any) => o.status === 'pending').length,
-          activeOrders: mockData.orders.filter((o: any) => ['assigned', 'accepted', 'in_progress'].includes(o.status)).length,
-          revenue,
-          pendingPayments: mockData.orders.filter((o: any) => o.status === 'completed' && o.paymentStatus === 'pending').length,
-          totalUsers: mockData.users.length,
-          totalCustomers: mockData.users.filter((u: any) => u.role === 'customer').length,
-          totalTechnicians: mockData.users.filter((u: any) => u.role === 'technician').length,
-        },
-        monthlyRevenue: [],
-      },
-    });
-    return;
-  }
 
   const [
     totalOrders,

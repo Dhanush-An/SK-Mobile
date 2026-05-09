@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import Tracking from '../models/Tracking';
 import Order from '../models/Order';
 import { AuthRequest } from '../middleware/authMiddleware';
-import { isDbConnected, mockData, saveMockData } from '../utils/mockStore';
+
+
 
 export const trackingController = {
   updateLocation: async (req: AuthRequest, res: Response) => {
@@ -10,18 +11,6 @@ export const trackingController = {
       const { latitude, longitude, orderId } = req.body;
       const technicianId = req.user?.userId;
 
-      if (!isDbConnected()) {
-        mockData.tracking = mockData.tracking || {};
-        mockData.tracking[technicianId!] = {
-          technicianId,
-          orderId,
-          latitude,
-          longitude,
-          updatedAt: new Date()
-        };
-        saveMockData();
-        return res.json({ success: true });
-      }
 
       const tracking = await Tracking.findOneAndUpdate(
         { technicianId },
@@ -39,11 +28,6 @@ export const trackingController = {
     try {
       const { technicianId } = req.params;
 
-      if (!isDbConnected()) {
-        const data = mockData.tracking?.[technicianId];
-        if (!data) return res.status(404).json({ success: false, message: 'Location not found' });
-        return res.json({ success: true, data });
-      }
 
       const tracking = await Tracking.findOne({ technicianId });
       if (!tracking) {
@@ -58,13 +42,6 @@ export const trackingController = {
 
   getAllActiveTracking: async (req: Request, res: Response) => {
     try {
-      if (!isDbConnected()) {
-        const trackingList = Object.values(mockData.tracking || {}).map((t: any) => {
-          const user = mockData.users.find((u: any) => u._id === t.technicianId);
-          return { ...t, technicianId: { _id: t.technicianId, name: user?.name } };
-        });
-        return res.json({ success: true, data: trackingList });
-      }
 
       const tracking = await Tracking.find().populate('technicianId', 'name');
       res.json({ success: true, data: tracking });

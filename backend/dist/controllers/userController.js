@@ -5,35 +5,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateTechnicianStatus = exports.updateUserStatus = exports.updateUserRole = exports.getUserById = exports.getAllUsers = void 0;
 const User_1 = __importDefault(require("../models/User"));
-const mockStore_1 = require("../utils/mockStore");
 // GET /api/users  [Admin]
 const getAllUsers = async (req, res) => {
     const { role } = req.query;
     const filter = {};
     if (role && typeof role === 'string')
         filter.role = role;
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const users = mockStore_1.mockData.users.filter((u) => !role || u.role === role);
-        res.status(200).json({ success: true, data: { users } });
-        return;
-    }
     const users = await User_1.default.find(filter).select('-password').sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: { users } });
 };
 exports.getAllUsers = getAllUsers;
 // GET /api/users/:id  [Admin]
 const getUserById = async (req, res) => {
-    // Mock Mode
-    if (!(0, mockStore_1.isDbConnected)()) {
-        const user = mockStore_1.mockData.users.find((u) => u._id === req.params.id);
-        if (!user) {
-            res.status(404).json({ success: false, message: 'User not found' });
-            return;
-        }
-        res.status(200).json({ success: true, data: { user } });
-        return;
-    }
     const user = await User_1.default.findById(req.params.id).select('-password');
     if (!user) {
         res.status(404).json({ success: false, message: 'User not found' });

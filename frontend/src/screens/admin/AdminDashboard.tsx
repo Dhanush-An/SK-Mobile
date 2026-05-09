@@ -102,11 +102,21 @@ const AdminDashboard = () => {
                   <Text style={styles.headerTitle}>SKTECH ADMIN</Text>
                 </View>
                 <View style={styles.headerActions}>
-                  <TouchableOpacity style={styles.notifBtn} onPress={() => setNotifVisible(true)}>
+                  <TouchableOpacity 
+                    style={styles.notifBtn} 
+                    onPress={() => setNotifVisible(true)}
+                    activeOpacity={0.7}
+                    hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                  >
                     <Text style={styles.notifIcon}>🔔</Text>
                     {notifications.some(n => !n.isRead) && <View style={styles.notifDot} />}
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.kebabBtn} onPress={() => setMenuVisible(true)}>
+                  <TouchableOpacity 
+                    style={styles.kebabBtn} 
+                    onPress={() => setMenuVisible(true)}
+                    activeOpacity={0.7}
+                    hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                  >
                     <Text style={styles.kebabIcon}>⋮</Text>
                   </TouchableOpacity>
                 </View>
@@ -130,31 +140,17 @@ const AdminDashboard = () => {
               </View>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
               <Text style={styles.sectionTitle}>Recent Bookings</Text>
               <AppCard style={styles.listCard}>
                 <Text style={styles.emptyText}>No recent bookings found.</Text>
               </AppCard>
 
               <Text style={styles.sectionTitle}>Service Team Status</Text>
-              <View style={styles.grid}>
-                {[
-                  { name: 'Naveen Kumar', status: 'Available', icon: '👤' },
-                  { name: 'Ajith S', status: 'On Job', icon: '👤' },
-                  { name: 'Praveen P', status: 'Available', icon: '👤' },
-                  { name: 'Ganesan R', status: 'Available', icon: '👤' },
-                ].map(tech => (
-                  <TouchableOpacity key={tech.name} style={styles.cardWrapper}>
-                    <AppCard style={styles.menuCardSmall}>
-                      <Text style={{fontSize: 24}}>{tech.icon}</Text>
-                      <Text style={styles.techNameSmall}>{tech.name}</Text>
-                      <Text style={[styles.techStatusSmall, tech.status === 'Available' ? {color: '#00E676'} : {color: '#FFC400'}]}>
-                        ● {tech.status}
-                      </Text>
-                    </AppCard>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <AppCard style={styles.listCard}>
+                <Text style={styles.emptyText}>No technicians online.</Text>
+              </AppCard>
+
 
               <Text style={styles.sectionTitle}>Management Modules</Text>
               <View style={styles.grid}>
@@ -578,6 +574,7 @@ const styles = StyleSheet.create({
   menuIcon: { fontSize: 24 },
   menuLabel: { color: Colors.text, fontSize: 13, fontWeight: '800', textAlign: 'center' },
   arrowIcon: { position: 'absolute', top: 12, right: 12 },
+
 
   // Notifications
   notifContainer: {

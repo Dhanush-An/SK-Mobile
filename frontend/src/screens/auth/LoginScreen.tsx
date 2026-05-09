@@ -110,11 +110,6 @@ const LoginScreen = () => {
         </View>
 
         {/* Demo Credentials */}
-        <View style={styles.demoBox}>
-          <Text style={styles.demoTitle}>🔑 Demo Credentials</Text>
-          <Text style={styles.demoText}>Admin: admin@sktechnology.com / Admin@123</Text>
-          <Text style={styles.demoText}>Tech: tech@sktechnology.com / Tech@123</Text>
-        </View>
 
         {/* Footer Link */}
         <View style={styles.footer}>

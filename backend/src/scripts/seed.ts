@@ -16,12 +16,10 @@ const seed = async () => {
     await Service.deleteMany({});
 
     // Create Admin
-    const salt = await bcrypt.genSalt(12);
-    const adminPassword = await bcrypt.hash('Admin@123', salt);
     await User.create({
       name: 'Admin SK',
       email: 'admin@sktechnology.com',
-      password: adminPassword,
+      password: 'Admin@123',
       phone: '9876543210',
       role: 'admin',
       isActive: true,
@@ -29,17 +27,17 @@ const seed = async () => {
     console.log('✅ Admin Created: admin@sktechnology.com / Admin@123');
 
     // Create Technician
-    const techPassword = await bcrypt.hash('Tech@123', salt);
     await User.create({
       name: 'John Technician',
       email: 'tech@sktechnology.com',
-      password: techPassword,
+      password: 'Tech@123',
       phone: '9876543211',
       role: 'technician',
       isActive: true,
       technicianStatus: 'available',
     });
     console.log('✅ Tech Created: tech@sktechnology.com / Tech@123');
+
 
     // Create Services
     const services = [

@@ -79,6 +79,10 @@ const userSchema = new mongoose_1.Schema({
         enum: ['available', 'busy', 'offline'],
         default: 'offline',
     },
+    address: {
+        type: String,
+        trim: true,
+    },
 }, {
     timestamps: true,
 });

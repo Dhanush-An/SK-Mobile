@@ -11,14 +11,14 @@ const ProfileScreen = () => {
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
 
   const handleLogout = () => {
-    Alert.alert('LOGOUT', 'Terminate current session?', [
+    Alert.alert('LOGOUT', 'Are you sure you want to logout?', [
       { text: 'CANCEL', style: 'cancel' },
-      { text: 'LOGOUT', style: 'destructive', onPress: logout },
+      { text: 'LOGOUT', style: 'destructive', onPress: () => logout() },
     ]);
   };
 
   return (
-    <ScreenWrapper padded={false}>
+    <ScreenWrapper padded={false} scrollable={false}>
       <ScrollView style={styles.container}>
         {/* Header Profile Section */}
         <View style={styles.header}>
@@ -90,8 +90,16 @@ const ProfileScreen = () => {
               </View>
            </AppCard>
 
-           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-              <Text style={styles.logoutBtnText}>TERMINATE SESSION</Text>
+           <TouchableOpacity 
+             style={styles.logoutBtn} 
+             onPress={() => {
+               Alert.alert('LOGOUT', 'Are you sure you want to logout?', [
+                 { text: 'CANCEL', style: 'cancel' },
+                 { text: 'LOGOUT', style: 'destructive', onPress: logout },
+               ]);
+             }}
+           >
+              <Text style={styles.logoutBtnText}>LOGOUT</Text>
            </TouchableOpacity>
 
            <Text style={styles.version}>SK TECHNOLOGY COMMAND CENTER v2.4.0</Text>
@@ -139,7 +147,7 @@ const styles = StyleSheet.create({
   userName: { color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
   userRole: { color: Colors.accent, fontSize: 12, fontWeight: '900', letterSpacing: 2, marginTop: 4 },
   
-  content: { padding: 25 },
+  content: { padding: 25, paddingBottom: 100 },
   sectionTitle: { color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: '900', letterSpacing: 1.5, marginBottom: 15, marginTop: 10 },
   settingsCard: { padding: 0, marginBottom: 25, overflow: 'hidden' },
   settingItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },

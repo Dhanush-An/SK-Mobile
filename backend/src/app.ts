@@ -14,6 +14,8 @@ import productRoutes from './routes/productRoutes';
 import leaveRoutes from './routes/leaveRoutes';
 import trackingRoutes from './routes/trackingRoutes';
 import campaignRoutes from './routes/campaignRoutes';
+import announcementRoutes from './routes/announcementRoutes';
+
 import { errorMiddleware } from './middleware/errorMiddleware';
 
 const app = express();
@@ -48,6 +50,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/campaigns', campaignRoutes);
+app.use('/api/announcements', announcementRoutes);
+
 
 // 404 handler
 app.use((_req, res) => {

@@ -14,13 +14,12 @@ import { leaveApi } from '../../api/leaveApi';
 import { trackingApi } from '../../api/trackingApi';
 import { notificationApi } from '../../api/notificationApi';
 import { campaignApi } from '../../api/campaignApi';
+import { announcementApi } from '../../api/announcementApi';
+
 
 export const SalaryView = ({ onBack }: { onBack: () => void }) => {
-  const salaries = [
-    { id: '1', name: 'Praveen Technician', role: 'Senior Tech', amount: 25000, status: 'PAID', date: '01-05-2026' },
-    { id: '2', name: 'Naveen Kumar', role: 'Junior Tech', amount: 18000, status: 'PENDING', date: '01-05-2026' },
-    { id: '3', name: 'Ajith S', role: 'Field Operative', amount: 20000, status: 'PAID', date: '01-05-2026' },
-  ];
+  const salaries: any[] = [];
+
 
   return (
     <View style={styles.container}>
@@ -49,7 +48,13 @@ export const SalaryView = ({ onBack }: { onBack: () => void }) => {
               <Text style={styles.itemDate}>{item.date}</Text>
             </View>
             {item.status === 'PENDING' && (
-              <TouchableOpacity style={[styles.addBtn, {marginTop: 15, marginBottom: 0}]}>
+              <TouchableOpacity 
+                style={[styles.addBtn, {marginTop: 15, marginBottom: 0}]}
+                onPress={() => Alert.alert('Payment System', `Processing salary for ${item.name}...`, [
+                  { text: 'Confirm', onPress: () => Alert.alert('Success', 'Payment processed via UPI/NetBanking.') },
+                  { text: 'Cancel' }
+                ])}
+              >
                 <Text style={styles.addBtnText}>PROCESS PAYMENT</Text>
               </TouchableOpacity>
             )}
@@ -61,11 +66,8 @@ export const SalaryView = ({ onBack }: { onBack: () => void }) => {
 };
 
 export const BillingView = ({ onBack }: { onBack: () => void }) => {
-  const billingItems = [
-    { id: 'B-101', type: 'SERVICE', title: 'CCTV Installation', amount: 14999, customer: 'Rajesh', date: '07-05-2026' },
-    { id: 'B-102', type: 'PRODUCT', title: 'Solar Camera Pro', amount: 8500, customer: 'Anand', date: '06-05-2026' },
-    { id: 'B-103', type: 'SERVICE', title: 'Network Setup', amount: 5999, customer: 'Meenakshi', date: '05-05-2026' },
-  ];
+  const billingItems: any[] = [];
+
 
   return (
     <View style={styles.container}>
@@ -319,16 +321,27 @@ export const OrdersView = ({ onBack }: { onBack: () => void }) => {
       if (res.data.data && res.data.data.length > 0) {
         setOrders(res.data.data);
       } else {
-        setOrders([
-          { _id: '17C826', date: '20 May', customerId: { name: 'JOHN DOE' }, items: '4x Hikvision 4MP', totalAmount: 12400, status: 'confirmed' },
-          { _id: '17C827', date: '19 May', customerId: { name: 'AJITH S' }, items: '1x Solar Cam', totalAmount: 4500, status: 'pending' },
-          { _id: '17C828', date: '18 May', customerId: { name: 'POOVASARAN' }, items: '2x WIFI PTZ', totalAmount: 8200, status: 'delivered' },
-        ]);
+        setOrders([]);
       }
+
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const handleUpdateStatus = async (status: string) => {
+    if (!selectedOrder) return;
+    try {
+      const res = await orderApi.updateStatus(selectedOrder._id, { status });
+      if (res.data.success) {
+        Alert.alert('Success', `Order ${status} successfully.`);
+        setDetailsVisible(false);
+        fetchOrders();
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to update order status.');
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -453,10 +466,16 @@ export const OrdersView = ({ onBack }: { onBack: () => void }) => {
                 </View>
 
                 <View style={{flexDirection: 'row', gap: 12, marginTop: 30}}>
-                   <TouchableOpacity style={[styles.actionBtn, {backgroundColor: '#00E676', flex: 1}]}>
+                   <TouchableOpacity 
+                     style={[styles.actionBtn, {backgroundColor: '#00E676', flex: 1}]}
+                     onPress={() => handleUpdateStatus('confirmed')}
+                   >
                       <Text style={styles.actionBtnText}>CONFIRM ORDER</Text>
                    </TouchableOpacity>
-                   <TouchableOpacity style={[styles.actionBtn, {backgroundColor: '#FF5252', flex: 1}]}>
+                   <TouchableOpacity 
+                     style={[styles.actionBtn, {backgroundColor: '#FF5252', flex: 1}]}
+                     onPress={() => handleUpdateStatus('cancelled')}
+                   >
                       <Text style={styles.actionBtnText}>CANCEL</Text>
                    </TouchableOpacity>
                 </View>
@@ -723,11 +742,8 @@ export const ProductsView = ({ onBack }: { onBack: () => void }) => {
     });
   };
 
-  const products = [
-    { id: '1', name: 'CONSISTENT 4 MP IP CAMERA BULLET', cat: 'CCTV CAMERAS', stock: '10 UNITS', price: '₹2,500' },
-    { id: '2', name: 'KRYSTAA 2 TB HDD', cat: 'CCTV CAMERAS', stock: '5 UNITS', price: '₹5,000' },
-    { id: '3', name: 'CP PLUS DVR 8 CHANNEL', cat: 'CCTV CAMERAS', stock: '25 UNITS', price: '₹4,500' },
-  ];
+  const products: any[] = [];
+
 
   const handleAddFeature = () => {
     if (newFeature.trim()) {
@@ -954,7 +970,8 @@ export const ProductsView = ({ onBack }: { onBack: () => void }) => {
 };
 
 export const TasksView = ({ onBack }: { onBack: () => void }) => {
-  const { simulateRole } = useAuth();
+  const { user } = useAuth();
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTech, setSelectedTech] = useState('Select Technician...');
   const [techListVisible, setTechListVisible] = useState(false);
@@ -1225,7 +1242,8 @@ export const AttendanceView = ({ onBack }: { onBack: () => void }) => {
 };
 
 export const ServiceRequestsView = ({ onBack }: { onBack: () => void }) => {
-  const { simulateRole } = useAuth();
+  const { user } = useAuth();
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [selectedTech, setSelectedTech] = useState('Select Technician...');
@@ -1480,7 +1498,8 @@ export const ServiceRequestsView = ({ onBack }: { onBack: () => void }) => {
                 onPress={() => {
                   setModalVisible(false);
                   Alert.alert("Success", "Task assigned. Switching to Technician terminal...", [
-                    { text: "OK", onPress: () => simulateRole('technician') }
+                    { text: "OK", onPress: () => console.log('Role simulated') }
+
                   ]);
                 }}
               >
@@ -1884,30 +1903,60 @@ export const MarketingHubView = ({ onBack }: { onBack: () => void }) => {
 
 export const AnnouncementsView = ({ onBack }: { onBack: () => void }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [announcements, setAnnouncements] = useState([
-    { id: '1', title: 'NEW SAFETY PROTOCOL', date: '06-05-2026', priority: 'HIGH', content: 'All technicians must wear grade-4 safety helmets.' },
-    { id: '2', title: 'SOFTWARE UPDATE', date: '04-05-2026', priority: 'NORMAL', content: 'Version 2.4.0 is now live.' },
-  ]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
 
-  const handleBroadcast = () => {
+  const fetchAnnouncements = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await announcementApi.getAll();
+      setAnnouncements(res.data.data);
+    } catch (err) {
+      console.log('Error fetching announcements:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, [fetchAnnouncements]);
+
+  const handleBroadcast = async () => {
     if (!newTitle || !newContent) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-    const newAnn = {
-      id: (announcements.length + 1).toString(),
-      title: newTitle.toUpperCase(),
-      date: new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
-      priority: 'NORMAL',
-      content: newContent
-    };
-    setAnnouncements([newAnn, ...announcements]);
-    setNewTitle('');
-    setNewContent('');
-    setModalVisible(false);
-    Alert.alert('Success', 'Announcement broadcasted successfully.');
+    try {
+      await announcementApi.create({
+        title: newTitle.toUpperCase(),
+        content: newContent,
+        priority: 'NORMAL'
+      });
+      setNewTitle('');
+      setNewContent('');
+      setModalVisible(false);
+      fetchAnnouncements();
+      Alert.alert('Success', 'Announcement broadcasted successfully.');
+    } catch (err) {
+      Alert.alert('Error', 'Failed to broadcast announcement.');
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    Alert.alert('Delete', 'Are you sure you want to delete this announcement?', [
+      { text: 'Cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        try {
+          await announcementApi.delete(id);
+          fetchAnnouncements();
+        } catch (err) {
+          Alert.alert('Error', 'Failed to delete announcement.');
+        }
+      }}
+    ]);
   };
 
 
@@ -1926,18 +1975,28 @@ export const AnnouncementsView = ({ onBack }: { onBack: () => void }) => {
         <Text style={styles.addBtnText}>+ CREATE ANNOUNCEMENT</Text>
       </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {announcements.map(item => (
-          <AppCard key={item.id} style={styles.itemCard}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.techName}>{item.title}</Text>
-              <View style={[styles.priorityDot, {backgroundColor: item.priority === 'HIGH' ? '#FF5252' : '#2979FF'}]} />
-            </View>
-            <Text style={styles.detailText}>{item.date} • Priority: {item.priority}</Text>
-            <Text style={[styles.detailText, {marginTop: 10, color: Colors.text}]}>{item.content}</Text>
-          </AppCard>
-        ))}
-      </ScrollView>
+      {loading ? <ActivityIndicator color={Colors.accent} /> : (
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+          {announcements.map(item => (
+            <AppCard key={item._id} style={styles.itemCard}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.techName}>{item.title}</Text>
+                <View style={[styles.priorityDot, {backgroundColor: item.priority === 'HIGH' ? '#FF5252' : '#2979FF'}]} />
+              </View>
+              <Text style={styles.detailText}>{new Date(item.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')} • Priority: {item.priority}</Text>
+              <Text style={[styles.detailText, {marginTop: 10, color: Colors.text}]}>{item.content}</Text>
+              
+              <TouchableOpacity 
+                style={{alignSelf: 'flex-end', marginTop: 10}}
+                onPress={() => handleDelete(item._id)}
+              >
+                <Text>🗑️</Text>
+              </TouchableOpacity>
+            </AppCard>
+          ))}
+          {announcements.length === 0 && <Text style={styles.emptyText}>No active announcements.</Text>}
+        </ScrollView>
+      )}
 
       <Modal
         animationType="slide"
@@ -1963,6 +2022,7 @@ export const AnnouncementsView = ({ onBack }: { onBack: () => void }) => {
     </View>
   );
 };
+
 
 export const LeaveRequestsView = ({ onBack, hideHeader = false }: { onBack: () => void, hideHeader?: boolean }) => {
   const [requests, setRequests] = useState<any[]>([]);

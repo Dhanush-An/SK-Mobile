@@ -86,14 +86,8 @@ const CATEGORIES = [
   { id: '11', name: 'ALL', icon: '📁' },
 ];
 
-const HARDWARE = [
-  { id: '1', category: 'IP CAMERAS', name: 'HIKVISION 4MP IP', price: '₹3,500', img: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=400', desc: 'High-performance 4MP IP camera with infrared night vision up to 30 meters. Features AI human detection and H.265+ compression for efficient storage.' },
-  { id: '2', category: 'WIFI CAM', name: 'CP PLUS 2.4 GHZ', price: '₹2,200', img: 'https://images.unsplash.com/photo-1558002038-1055907df827?w=400', desc: 'Plug-and-play WiFi camera with 1080p resolution and two-way talk. Perfect for home monitoring with mobile app integration and cloud storage options.' },
-  { id: '3', category: 'PTZ DOME', name: 'DAHUA PTZ 360', price: '₹8,500', img: 'https://images.unsplash.com/photo-1524143878510-e3b8d6312402?w=400', desc: 'Full 360-degree pan-tilt-zoom camera with 25x optical zoom. Designed for large area surveillance with intelligent tracking and IP67 weather resistance.' },
-  { id: '4', category: 'IP CAMERAS', name: 'DAHUA 2MP NIGHT', price: '₹2,800', img: 'https://images.unsplash.com/photo-1524143878510-e3b8d6312402?w=400', desc: 'Optimized 2MP IP camera for ultra-low light conditions. Provides crystal clear imagery in near-total darkness without relying on IR emitters.' },
-  { id: '5', category: 'NVR SYSTEMS', name: 'HIKVISION 8CH NVR', price: '₹12,500', img: 'https://images.unsplash.com/photo-1558002038-1055907df827?w=400', desc: 'Professional 8-channel Network Video Recorder. Supports up to 4K resolution recording and remote playback via mobile app. Includes 2TB surveillance-grade HDD.' },
-  { id: '6', category: 'SMART LOCKS', name: 'YALE PRO LOCK', price: '₹15,000', img: 'https://images.unsplash.com/photo-1558002038-1055907df827?w=400', desc: 'Premium smart deadbolt with biometric fingerprint sensor and WiFi connectivity. Manage access codes remotely and receive real-time entry notifications.' },
-];
+const HARDWARE: any[] = [];
+
 
 type NavProp = NativeStackNavigationProp<CustomerStackParamList>;
 
@@ -365,10 +359,8 @@ const CustomerDashboard = () => {
         <View style={styles.sectionContainer}>
            <Text style={[styles.sectionHeading, {textAlign: 'center'}]}>SECURED <Text style={{color: Colors.accent}}>SECTORS</Text></Text>
            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingRight: 20}}>
-              {[
-                { name: 'CLARENCE JAMES', sector: 'IT PARK', text: 'Flawless execution and premium hardware.' },
-                { name: 'MOHAN RAJ', sector: 'RETAIL MALL', text: 'The best security partner we ever had.' },
-              ].map((t, idx) => (
+              {[].map((t: any, idx) => (
+
                 <AppCard key={idx} style={styles.testimonialCard}>
                    <Text style={styles.testimonialText}>"{t.text}"</Text>
                    <Text style={styles.testimonialName}>{t.name}</Text>
