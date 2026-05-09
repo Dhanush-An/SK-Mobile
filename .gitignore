@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project specific
+backend/node_modules/
+backend/dist/
+backend/.env
+frontend/node_modules/
+frontend/android/app/build/
+frontend/android/.gradle/
+frontend/ios/Pods/
+frontend/.env
