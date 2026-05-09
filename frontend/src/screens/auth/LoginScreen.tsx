@@ -44,9 +44,10 @@ const LoginScreen = () => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <TouchableOpacity onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Landing')} style={styles.backBtn}>
               <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
+
             <View style={styles.logoRow}>
               <AppLogo size={28} />
               <Text style={styles.logoText}>SK Technology</Text>
